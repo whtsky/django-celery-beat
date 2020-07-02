@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from celery import schedules
-from .utils import subtract_time
+from .utils import subtract_time, NEVER_CHECK_TIMEOUT
 
 
 class multipletime(schedules.BaseSchedule):
@@ -29,6 +29,9 @@ class multipletime(schedules.BaseSchedule):
             return subtract_time(self.times[0], now_time) + timedelta(hours=24)
 
     def is_due(self, last_run_at):
+        if len(self.times) == 0:
+            return schedules.schedstate(is_due=False, next=NEVER_CHECK_TIMEOUT)
+
         last_run_at = last_run_at.astimezone(self.timezone)
         rem_delta = self.remaining_estimate(last_run_at)
         remaining_s = max(rem_delta.total_seconds(), 0)
